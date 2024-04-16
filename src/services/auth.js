@@ -1,0 +1,86 @@
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+import ApiError from "../error/ApiError.js";
+import { config } from "../config/config.js";
+
+import User from "../model/User.js";
+
+const handleRegister = async (registerData) => {
+  let { name, email, password } = registerData;
+
+  if (!name || !email || !password) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const userAlreadyExists = await User.findOne({ email });
+
+  if (userAlreadyExists) {
+    throw new ApiError(400, "Email already in use");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  password = hashedPassword;
+
+  const newUser = await User.create({ name, email, password });
+
+  const payload = {
+    _id: newUser._id,
+    role: newUser.role,
+  };
+
+  const secret = config.jwtSecret;
+  const expiresIn = config.jwtExpiresIn;
+
+  const token = jwt.sign(payload, secret, {
+    expiresIn,
+  });
+
+  return {
+    token,
+  };
+};
+
+const handleLogin = async (loginData) => {
+  const { email, password } = loginData;
+
+  if (!email || !password) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const passwordMatch = await bcrypt.compare(password, user.password);
+
+  if (!passwordMatch) {
+    throw new ApiError(401, "Incorrect email or password");
+  }
+
+  const payload = {
+    _id: user._id,
+    role: user.role,
+  };
+
+  const secret = config.jwtSecret;
+  const expiresIn = config.jwtExpiresIn;
+
+  const token = jwt.sign(payload, secret, {
+    expiresIn,
+  });
+
+  return {
+    token,
+  };
+};
+
+const AuthService = {
+  handleRegister,
+  handleLogin,
+};
+
+export default AuthService;
