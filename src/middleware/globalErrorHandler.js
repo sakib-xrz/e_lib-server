@@ -1,4 +1,5 @@
 import ApiError from "../error/ApiError.js";
+import { config } from "../config/config.js";
 
 const globalErrorHandler = (err, _req, res, _next) => {
   console.log(`💀 Global Error Handler ~`, err);

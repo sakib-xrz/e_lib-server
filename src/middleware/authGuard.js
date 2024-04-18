@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
 import ApiError from "../error/ApiError.js";
 
+import User from "../model/User.js";
+
 const authGuard = (...roles) => {
   async (req, _res, next) => {
     try {
@@ -22,6 +24,16 @@ const authGuard = (...roles) => {
       // verify token
       const decoded = jwt.verify(token, secret);
       req.user = decoded;
+
+      const user = await User.findById(decoded._id);
+
+      if (!user) {
+        throw new ApiError(401, "You are not authorized to access this route");
+      }
+
+      if (user.status !== "active") {
+        throw new ApiError(401, "You are not authorized to access this route");
+      }
 
       // check if user has the required role
       if (roles.length && !roles.includes(req.user.role)) {

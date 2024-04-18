@@ -52,13 +52,17 @@ const handleLogin = async (loginData) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new ApiError(404, "User not found");
+    throw new ApiError(404, "No user found with this email");
   }
 
   const passwordMatch = await bcrypt.compare(password, user.password);
 
   if (!passwordMatch) {
     throw new ApiError(401, "Incorrect email or password");
+  }
+
+  if (user.status === "suspended") {
+    throw new ApiError(401, "Your account has been suspended");
   }
 
   const payload = {

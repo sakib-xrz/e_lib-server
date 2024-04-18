@@ -13,11 +13,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(morgan("dev"));
 
-// global error handler middleware
-app.use(globalErrorHandler);
-
 // routes
 app.use("/api/v1", router);
+
+// global error handler middleware
+app.use(globalErrorHandler);
 
 // handle not found routes
 app.use((req, res, next) => {
