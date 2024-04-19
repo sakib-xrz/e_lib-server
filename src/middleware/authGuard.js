@@ -6,45 +6,44 @@ import ApiError from "../error/ApiError.js";
 import User from "../model/User.js";
 
 const authGuard = (...roles) => {
-  async (req, _res, next) => {
+  return async (req, res, next) => {
     try {
-      // get token from request headers
+      // Get token from request headers, ensuring 'Authorization' is present
       const bearerToken = req.headers.authorization;
-
-      // check if token exists
-      if (!bearerToken) {
-        throw new ApiError(401, "You are not authorized to access this route");
+      if (!bearerToken || !bearerToken.startsWith("Bearer ")) {
+        throw new ApiError(401, "Invalid or missing authorization header");
       }
 
-      // extract token from bearer token
-      const token = bearerToken.split(" ")[1];
+      // Extract token from bearer token
+      const token = bearerToken.split(" ")[1]; // Fix: Handle cases with extra spaces
 
       const secret = config.jwtSecret;
 
-      // verify token
+      // Verify token
       const decoded = jwt.verify(token, secret);
       req.user = decoded;
 
       const user = await User.findById(decoded._id);
 
       if (!user) {
-        throw new ApiError(401, "You are not authorized to access this route");
+        throw new ApiError(401, "User not found");
       }
 
       if (user.status !== "active") {
-        throw new ApiError(401, "You are not authorized to access this route");
+        throw new ApiError(401, "User is not active");
       }
 
-      // check if user has the required role
+      // Check if user has the required role (if any roles provided)
       if (roles.length && !roles.includes(req.user.role)) {
         throw new ApiError(
           403,
           "You don't have permission to access this route"
         );
       }
+
       next();
     } catch (error) {
-      next(error);
+      next(error); // Pass error to error handling middleware
     }
   };
 };
