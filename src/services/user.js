@@ -1,5 +1,7 @@
-import User from "../model/User.js";
+import fs from "node:fs";
 import cloudinary from "../utils/cloudinary.js";
+
+import User from "../model/User.js";
 
 const handleGetUser = async (user) => {
   const { _id } = user;
@@ -29,6 +31,9 @@ const handleUpdateProfilePicture = async (user, file) => {
     folder: "profile-pictures/",
     filename_override: fileName,
     format: type.split("/").at(-1),
+    public_id: _id,
+    overwrite: true,
+    invalidate: true,
   });
 
   const updatedUser = await User.findByIdAndUpdate(
@@ -40,6 +45,8 @@ const handleUpdateProfilePicture = async (user, file) => {
       new: true,
     }
   ).select("-password -__v");
+
+  await fs.promises.unlink(filePath);
 
   return updatedUser;
 };
