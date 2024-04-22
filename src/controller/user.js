@@ -16,6 +16,20 @@ const getUser = catchAsync(async (req, res) => {
   });
 });
 
+const updateUser = catchAsync(async (req, res) => {
+  const userId = req.params.id;
+  const { ...updatedUserData } = req.body;
+
+  const result = await MeService.handleUpdateUser(userId, updatedUserData);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User data updated successfully",
+    data: result,
+  });
+});
+
 const updateProfilePicture = catchAsync(async (req, res) => {
   const user = req.user;
   const file = req.file;
@@ -32,6 +46,7 @@ const updateProfilePicture = catchAsync(async (req, res) => {
 
 const UserController = {
   getUser,
+  updateUser,
   updateProfilePicture,
 };
 

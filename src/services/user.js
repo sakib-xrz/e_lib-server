@@ -9,6 +9,25 @@ const handleGetUser = async (user) => {
   return userData;
 };
 
+const handleUpdateUser = async (userId, updatedUserData) => {
+  const targetedUser = await User.findById(userId);
+
+  if (!targetedUser) {
+    throw new Error("User not found");
+  }
+
+  if (Object.keys(updatedUserData).includes("email", "profile_picture")) {
+    delete updatedUserData.email;
+    delete updatedUserData.profile_picture;
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(userId, updatedUserData, {
+    new: true,
+  }).select("-password -__v");
+
+  return updatedUser;
+};
+
 const handleUpdateProfilePicture = async (user, file) => {
   const { _id } = user;
 
@@ -53,6 +72,7 @@ const handleUpdateProfilePicture = async (user, file) => {
 
 const MeService = {
   handleGetUser,
+  handleUpdateUser,
   handleUpdateProfilePicture,
 };
 
