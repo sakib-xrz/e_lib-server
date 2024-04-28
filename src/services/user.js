@@ -1,5 +1,8 @@
 import fs from "node:fs";
+import bcrypt from "bcrypt";
+
 import cloudinary from "../utils/cloudinary.js";
+import ApiError from "../error/ApiError.js";
 
 import User from "../model/User.js";
 
@@ -13,7 +16,7 @@ const handleUpdateUser = async (userId, updatedUserData) => {
   const targetedUser = await User.findById(userId);
 
   if (!targetedUser) {
-    throw new Error("User not found");
+    throw new ApiError(404, "User not found");
   }
 
   if (Object.keys(updatedUserData).includes("email", "profile_picture")) {
@@ -28,13 +31,50 @@ const handleUpdateUser = async (userId, updatedUserData) => {
   return updatedUser;
 };
 
+const handleChangePassword = async (user, currentPassword, newPassword) => {
+  const { _id } = user;
+
+  const targetUser = await User.findById(_id);
+
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const isPasswordMatch = await bcrypt.compare(
+    currentPassword,
+    targetUser.password
+  );
+
+  if (!isPasswordMatch) {
+    throw new ApiError(400, "Incorrect current password");
+  }
+
+  if (currentPassword === newPassword) {
+    throw new ApiError(400, "Password must be different");
+  }
+
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+  const updatedUser = await User.findByIdAndUpdate(
+    _id,
+    {
+      password: hashedNewPassword,
+    },
+    {
+      new: true,
+    }
+  ).select("-password -__v");
+
+  return updatedUser;
+};
+
 const handleUpdateProfilePicture = async (user, file) => {
   const { _id } = user;
 
   const targetUser = await User.findById(_id);
 
   if (!targetUser) {
-    throw new Error("User not found");
+    throw new ApiError(404, "User not found");
   }
 
   const date = new Date();
@@ -73,6 +113,7 @@ const handleUpdateProfilePicture = async (user, file) => {
 const MeService = {
   handleGetUser,
   handleUpdateUser,
+  handleChangePassword,
   handleUpdateProfilePicture,
 };
 

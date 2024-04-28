@@ -30,6 +30,24 @@ const updateUser = catchAsync(async (req, res) => {
   });
 });
 
+const changePassword = catchAsync(async (req, res) => {
+  const user = req.user;
+  const { currentPassword, newPassword } = req.body;
+
+  const result = await MeService.handleChangePassword(
+    user,
+    currentPassword,
+    newPassword
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Password changed successfully",
+    data: result,
+  });
+});
+
 const updateProfilePicture = catchAsync(async (req, res) => {
   const user = req.user;
   const file = req.file;
@@ -47,6 +65,7 @@ const updateProfilePicture = catchAsync(async (req, res) => {
 const UserController = {
   getUser,
   updateUser,
+  changePassword,
   updateProfilePicture,
 };
 

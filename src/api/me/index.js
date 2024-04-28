@@ -7,6 +7,8 @@ import uploader from "../../middleware/uploader.js";
 
 meRoutes.get("/", authGuard(), UserController.getUser);
 
+meRoutes.patch("/change-password", authGuard(), UserController.changePassword);
+
 meRoutes.patch(
   "/profile-picture",
   authGuard(),
