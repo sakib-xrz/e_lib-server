@@ -47,7 +47,16 @@ const blogSchema = new mongoose.Schema(
       required: true,
     },
     tags: {
-      type: [String],
+      type: [
+        {
+          value: {
+            type: String,
+          },
+          label: {
+            type: String,
+          },
+        },
+      ],
       default: [],
     },
   },
